@@ -14,10 +14,10 @@ import android.view.ViewGroup;
 
 import com.uber.autodispose.AutoDisposeConverter;
 
-
 import javax.inject.Inject;
 
 import zxfd.mvp.sdk.util.RxLifecycleUtils;
+import zxfd.mvp.sdk.vary.VaryViewHelperController;
 
 
 /**
@@ -37,7 +37,7 @@ public abstract class BaseFragment<P extends IPresenter, B extends ViewDataBindi
 
     @Inject
     protected P presenter;
-
+    protected VaryViewHelperController mVaryViewHelperController;
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
@@ -49,6 +49,9 @@ public abstract class BaseFragment<P extends IPresenter, B extends ViewDataBindi
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         b = DataBindingUtil.bind(view);
+        if (null != getLoadingTargetView()) {
+            mVaryViewHelperController = new VaryViewHelperController(getLoadingTargetView());
+        }
         initLifecycleObserver(getLifecycle());
         initView(view);
         initData();
@@ -58,6 +61,10 @@ public abstract class BaseFragment<P extends IPresenter, B extends ViewDataBindi
     public void onDestroy() {
         this.rootView = null;
         super.onDestroy();
+    }
+    @MainThread
+    protected View getLoadingTargetView() {
+        return null;
     }
 
     protected <T> AutoDisposeConverter<T> bindLifecycle() {
@@ -79,12 +86,36 @@ public abstract class BaseFragment<P extends IPresenter, B extends ViewDataBindi
     @MainThread
     @Override
     public void showLoading() {
-
+        if (mVaryViewHelperController == null) {
+            throw new IllegalStateException("no ViewHelperController");
+        }
+        mVaryViewHelperController.showLoading();
     }
 
     @MainThread
     @Override
     public void hideLoading() {
+        if (mVaryViewHelperController == null) {
+            throw new IllegalStateException("no ViewHelperController");
+        }
+        mVaryViewHelperController.restore();
+    }
+    @MainThread
+    @Override
+    public void showEmptyView(String msg) {
+        if (mVaryViewHelperController == null) {
+            throw new IllegalStateException("no ViewHelperController");
+        }
+        mVaryViewHelperController.showEmpty(msg);
+    }
+    @MainThread
+    @Override
+    public void showNetError() {
+
+    }
+    @MainThread
+    @Override
+    public void showToastError() {
 
     }
 
